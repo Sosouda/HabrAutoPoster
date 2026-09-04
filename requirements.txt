@@ -1,6 +1,6 @@
 requests
 bs4
-mistralai
+groq
 redis
 rq
 rq-scheduler

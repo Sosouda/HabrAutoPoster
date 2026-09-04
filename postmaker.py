@@ -1,31 +1,35 @@
 import os
 import time
 from dotenv import load_dotenv
-from mistralai.client import Mistral
-from mistralai.client.errors import SDKError
+from groq import Groq, RateLimitError
 
 load_dotenv()
 
-MISTRAL_API_KEY = os.environ["MISTRAL_API_KEY"]
-MODEL = "mistral-medium-latest"
+GROQ_API_KEY = os.environ["GROQ_API_KEY"]
+MODEL = "llama-3.3-70b-versatile"
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 20
 SECONDS_BETWEEN_REQUESTS = 5
+MAX_BODY_CHARS = 6000
 
-client = Mistral(api_key=MISTRAL_API_KEY)
+client = Groq(api_key=GROQ_API_KEY)
 
 
 def format_post(article: dict) -> dict:
     """
     Принимает одну статью в формате, который отдаёт habrparser.parser():
     {"title": ..., "article": ..., "author": ..., "body": ...}
+
     Возвращает готовый пост.
     """
+    trimmed_article = dict(article)
+    trimmed_article["body"] = article["body"][:MAX_BODY_CHARS]
+
     response = None
     for attempt in range(1, MAX_RETRIES + 1):
         time.sleep(SECONDS_BETWEEN_REQUESTS)
         try:
-            response = client.chat.complete(
+            response = client.chat.completions.create(
                 model=MODEL,
                 messages=[
                     {
@@ -39,15 +43,14 @@ def format_post(article: dict) -> dict:
                             "5. Жесткое ограничение: весь текст должен быть не длиннее 2500 символов."
                             "Структура у поста должна быть такая: сначала заголовок статьи,потом выжимка на 1-2 минуты чтения поста,"
                             " снизу ссылка вшита в 'читать далее' и снизу 'автор статьи: (тут ник автора тоже как ссылка)'"
-                            f"Вот статья с которой ты работаешь: {article}."
+                            f"Вот статья с которой ты работаешь: {trimmed_article}."
                         ),
                     },
                 ],
             )
             break
-        except SDKError as e:
-            is_rate_limit = "429" in str(e) or "rate_limited" in str(e)
-            if is_rate_limit and attempt < MAX_RETRIES:
+        except RateLimitError:
+            if attempt < MAX_RETRIES:
                 print(f"[format_post] Rate limit, попытка {attempt}/{MAX_RETRIES}, жду {RETRY_DELAY_SECONDS}с...")
                 time.sleep(RETRY_DELAY_SECONDS)
                 continue
