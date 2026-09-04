@@ -1,6 +1,8 @@
 import os
 import requests
+from dotenv import load_dotenv
 
+load_dotenv()
 def publish_to_telegram(post: dict) -> None:
     """
     Принимает пост из format_post() и публикует его в канал
