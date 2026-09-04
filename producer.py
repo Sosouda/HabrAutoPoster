@@ -14,8 +14,8 @@ publish_queue = Queue("publish", connection=redis_conn)
 
 def on_format_success(job, connection, result, *args, **kwargs):
     """
-    Срабатывает автоматически, когда format_post (Mistral-вызов)
-    успешно отработал. result — это словарь поста, который вернул postmaker.format_post().
+    Срабатывает автоматически, когда format_post успешно отработал.
+    result — это словарь поста, который вернул postmaker.format_post().
     """
     next_slot = get_next_slot(connection)
     publish_queue.enqueue_at(next_slot, publish_to_telegram, result)
