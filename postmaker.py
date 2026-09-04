@@ -6,7 +6,7 @@ from groq import Groq, RateLimitError
 load_dotenv()
 
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "openai/gpt-oss-120b"
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 20
 SECONDS_BETWEEN_REQUESTS = 5
