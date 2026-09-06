@@ -1,8 +1,19 @@
+import sqlite3
+from pathlib import Path
 from urllib.parse import urlsplit
-from redis import Redis
+DB_PATH = Path(__file__).parent / "seen_articles.db"
 
-SEEN_KEY = "habr_bot:seen_articles"
-
+def _get_connection() -> sqlite3.Connection:
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS seen_articles (
+            url TEXT PRIMARY KEY,
+            seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    return conn
 
 def normalize_url(url: str) -> str:
     """
@@ -13,11 +24,21 @@ def normalize_url(url: str) -> str:
     return f"{parts.scheme}://{parts.netloc}{parts.path.rstrip('/')}"
 
 
-def is_new(redis_conn: Redis, article_url: str) -> bool:
+def is_new(article_url: str) -> bool:
     """
     Возвращает True, если статья ещё не обрабатывалась, и сразу
-    помечает её как обработанную (атомарно, через SADD).
+    записывает её как обработанную.
+
+    PRIMARY KEY на url гарантирует, что повторная вставка того же
+    URL просто провалится (IntegrityError).
     """
     clean_url = normalize_url(article_url)
-    added = redis_conn.sadd(SEEN_KEY, clean_url)
-    return added == 1
+    conn = _get_connection()
+    try:
+        conn.execute("INSERT INTO seen_articles (url) VALUES (?)", (clean_url,))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()

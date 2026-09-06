@@ -21,7 +21,7 @@ def parse_and_enqueue():
     articles = parser()
 
     for article in articles:
-        if not is_new(redis_conn, article["article"]):
+        if not is_new(article["article"]):
             print(f"[producer] Пропущено (уже обработано): {article['title']}")
             continue
 
