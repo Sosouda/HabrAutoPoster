@@ -5,15 +5,14 @@ producer.py
 отфильтровывает уже виденные статьи и кладёт новые в очередь на оформление.
 """
 
-from redis import Redis
 from rq import Queue
-
+from redis_conn import redis_conn
 from habrparser import parser
 from tasks import format_post
 from callbacks import on_format_success
 from dedup import is_new
 
-redis_conn = Redis(host="localhost", port=6379, db=0)
+
 format_queue = Queue("format", connection=redis_conn)
 
 

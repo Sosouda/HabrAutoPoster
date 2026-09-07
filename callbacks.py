@@ -7,13 +7,12 @@ Callback-функции для RQ должны лежать в отдельно�
 а воркер не может импортировать функцию из чужого __main__).
 """
 
-from redis import Redis
+from redis_conn import redis_conn
 from rq import Queue
 
 from tasks import publish_to_telegram
 from slots import get_next_slot
 
-redis_conn = Redis(host="localhost", port=6379, db=0)
 publish_queue = Queue("publish", connection=redis_conn)
 
 

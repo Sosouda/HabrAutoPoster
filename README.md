@@ -72,6 +72,8 @@ WorkingDirectory=/home/habrbot/HabrAutoPoster
 EnvironmentFile=/home/habrbot/HabrAutoPoster/.env
 ExecStart=/home/habrbot/HabrAutoPoster/.venv/bin/rq worker format
 Restart=always
+RestartSec=10
+StartLimitIntervalSec=0
 User=habrbot
 
 [Install]
@@ -91,6 +93,8 @@ WorkingDirectory=/home/habrbot/HabrAutoPoster
 EnvironmentFile=/home/habrbot/HabrAutoPoster/.env
 ExecStart=/home/habrbot/HabrAutoPoster/.venv/bin/rq worker publish --with-scheduler
 Restart=always
+RestartSec=10
+StartLimitIntervalSec=0
 User=habrbot
 
 [Install]
