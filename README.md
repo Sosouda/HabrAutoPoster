@@ -70,7 +70,8 @@ After=network.target
 [Service]
 WorkingDirectory=/home/habrbot/HabrAutoPoster
 EnvironmentFile=/home/habrbot/HabrAutoPoster/.env
-ExecStart=/home/habrbot/HabrAutoPoster/.venv/bin/rq worker format
+ExecStartPre=/home/habrbot/HabrAutoPoster/.venv/bin/python3 /home/habrbot/HabrAutoPoster/ensure_master.py
+ExecStart=/bin/bash -c 'exec /home/habrbot/HabrAutoPoster/.venv/bin/rq worker format --url redis://:${RPASSW}@localhost:6379'
 Restart=always
 RestartSec=10
 StartLimitIntervalSec=0
@@ -91,8 +92,8 @@ After=network.target
 [Service]
 WorkingDirectory=/home/habrbot/HabrAutoPoster
 EnvironmentFile=/home/habrbot/HabrAutoPoster/.env
-ExecStart=/home/habrbot/HabrAutoPoster/.venv/bin/rq worker publish --with-scheduler
-Restart=always
+ExecStartPre=/home/habrbot/HabrAutoPoster/.venv/bin/python3 /home/habrbot/HabrAutoPoster/ensure_master.py
+ExecStart=/bin/bash -c 'exec /home/habrbot/HabrAutoPoster/.venv/bin/rq worker publish --with-scheduler --url redis://:${RPASSW}@localhost:6379'Restart=always
 RestartSec=10
 StartLimitIntervalSec=0
 User=habrbot
@@ -115,14 +116,6 @@ $ sudo systemctl status habr-worker-publish #Active: active (running)
 ```sh
 $ python3 producer.py
 $ journalctl -u habr-worker-format -n 30 --no-pager
-```
-При ошибке в логах уберите со статей пометку "выложенные"
-```sh
-$ redis-cli
-```
-```redis-cli
-SMEMBERS habr_bot:seen_articles 
-SREM habr_bot:seen_articles "ссылка на статью"
 ```
 Перезагрузите воркера
 ```sh
